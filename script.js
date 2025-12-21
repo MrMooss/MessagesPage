@@ -127,9 +127,6 @@ document.getElementById('menuArchiveBtn').onclick = () => {
     document.getElementById('menuOverlay').classList.remove('show');
     showArchive();
 };
-document.getElementById('menuRefreshBtn').onclick = () => {
-    location.reload();
-};
 
 // Event listeners
 document.getElementById('fullscreenBtn').onclick = showImageFullscreen;
