@@ -354,6 +354,14 @@ h1 {
     font-family: 'Itim', cursive; 
 }
 
+.countdown {
+    margin-top: 15px;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #e760a4;
+}
+
+
 .no-image { display: none; }
 
 @media (max-width: 768px) { 
