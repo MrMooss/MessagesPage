@@ -82,7 +82,7 @@ async function loadRandomMessage() {
         }
         const randomDoc = snapshot.docs[Math.floor(Math.random() * snapshot.docs.length)];
         window.currentMessage = { id: randomDoc.id, ...randomDoc.data() };
-        document.getElementById('boxImg').src = 'https://placehold.co/600x400/ff69b4/fff?text=Zárt+ajándék';
+        document.getElementById('boxImg').src = 'images\\closedPresent.png';
     } catch (error) { 
         console.error('Load error:', error); 
     }
