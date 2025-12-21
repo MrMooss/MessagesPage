@@ -4,120 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Napi ajándék 💝</title>
-    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            font-family: 'Itim', cursive; min-height: 100vh;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; padding: 20px;
-        }
-        h1 { font-size: clamp(1.5em, 5vw, 2.5em); color: #d63384; margin-bottom: 30px; }
-        .doboz { width: 90vw; max-width: 400px; cursor: pointer; position: relative; }
-        .doboz img { width: 100%; height: auto; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .content {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.98); padding: 25px; border-radius: 20px;
-            max-width: 85%; opacity: 0; transform: translate(-50%, -50%) scale(0.7);
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .content.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        .content img { max-width: 100%; height: 160px; object-fit: cover; border-radius: 15px; margin: 15px 0; }
-        .content h2 { color: #d63384; font-size: 1.4em; margin-bottom: 10px; }
-        .content p { font-size: 1.2em; color: #333; line-height: 1.4; }
-        .szamlalo { margin-top: 20px; font-size: 1.1em; color: #666; }
-        @media (max-width: 480px) { .content { padding: 20px; } }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Itim&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>💝 Napi ajándékod, Szerelmem 💝</h1>
-    <div class="doboz" id="doboz">
-        <img id="dobozKep" src="SAJAT_ZART_DOBOZ_URL" alt="Ajándék doboz">
-        <div class="content" id="content">
-            <h2 id="napiUzenet">Betöltés...</h2>
-            <img id="napiKep" src="" alt="Napi kép">
-            <p id="napiSzoveg"></p>
-            <div class="szamlalo" id="szamlalo"></div>
+    <!-- HAMBURGER MENÜ -->
+    <div class="hamburger-menu" id="hamburgerBtn">
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+    </div>
+
+    <!-- MENÜ PANEL -->
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content">
+            <button class="close-menu-btn" id="closeMenuBtn">×</button>
+            <h2>💝 Menü</h2>
+            <button class="menu-item" id="menuArchiveBtn">📜 Archívum</button>
+            <button class="menu-item" id="menuRefreshBtn">🔄 Frissítés</button>
         </div>
     </div>
 
-    <script>
-        // Firebase config - cseréld a saját projekted config-jára (Firebase Console → Project Settings → SDK setup)
-        const firebaseConfig = {
-            apiKey: "AIza...", // ← Firebase Console-ból másold
-            authDomain: "projekted.firebaseapp.com",
-            projectId: "projekted",
-            storageBucket: "projekted.appspot.com",
-            messagingSenderId: "123",
-            appId: "1:123:web:abc"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <h1>💝 Napi ajándékod 💝</h1>
+    <div class="gift-box" id="giftBox">
+        <img id="boxImg" src="https://placehold.co/600x400/ddd/fff?text=Nincs+új+üzenet" alt="Ajándék doboz">
+    </div>
 
-        const doboz = document.getElementById('doboz');
-        const content = document.getElementById('content');
-        let maIrtUzenet = null;
-        let kinyitva = false;
+    <!-- ÜZENET POPUP -->
+    <div class="popup-overlay" id="messagePopup">
+        <div class="popup">
+            <button class="close-btn">×</button>
+            <div class="message-container">
+                <div class="uzenet-papir" id="paperMessage">
+                    <div class="papir-szakad"></div>
+                    Betöltés...
+                </div>
+                <div class="polaroid no-image" id="messageImage">
+                    <div class="polaroid-alap"></div>
+                    <img id="popupImage" src="" alt="Kép">
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="fullscreenBtn">Teljes képernyő</button>
+                <button class="nav-btn" id="archiveBtn">Archívum →</button>
+            </div>
+        </div>
+    </div>
 
-        // Random üzenet betöltése (még nem kinyitott)
-        async function toltesRandomUzenet() {
-            const snapshot = await db.collection('messages')
-                .where('kinyitva', '==', false).limit(50).get();
-            if (snapshot.empty) {
-                document.getElementById('napiUzenet').textContent = 'Minden üzenetet kibontottad! 😍';
-                return;
-            }
-            const randomDoc = snapshot.docs[Math.floor(Math.random() * snapshot.docs.length)];
-            maIrtUzenet = randomDoc.data();
-            document.getElementById('szamlalo').textContent = `Új üzenetek: ${snapshot.docs.length} db 🎁`;
-        }
+    <!-- FULLSCREEN KÉP -->
+    <div class="popup-overlay" id="fullscreenPopup">
+        <div class="popup fullscreen-popup">
+            <button class="close-btn close-btn-white">×</button>
+            <img id="fullscreenImage" src="" alt="Teljes képernyő" class="fullscreen-img">
+        </div>
+    </div>
 
-        // Doboz kattintás
-        async function dobozKlikk() {
-            if (kinyitva) return;
-            kinyitva = true;
-            
-            // Frissítsd Firestore-ban: ez az üzenet már kinyílt
-            await db.collection('messages').doc(maIrtUzenet.id).update({ kinyitva: true });
-            
-            // Animáció + konfetti
-            content.classList.add('show');
-            document.getElementById('dobozKep').src = 'SAJAT_NYITOTT_DOBOZ_URL';
-            document.getElementById('napiUzenet').textContent = maIrtUzenet.uzenet;
-            document.getElementById('napiKep').src = maIrtUzenet.kep;
-            document.getElementById('napiSzoveg').textContent = 'Szeretlek! 💕 Kattints holnap újra!';
-            
-            // Konfetti (opcionális)
-            for(let i=0; i<50; i++) {
-                setTimeout(() => {
-                    const emoji = ['💖','🌸','✨','💝','🌟'][Math.floor(Math.random()*5)];
-                    const el = document.createElement('div');
-                    el.innerHTML = emoji; el.style.cssText = `
-                        position:fixed; left:${Math.random()*100}vw; top:100vh;
-                        font-size:2em; pointer-events:none; animation:confetti 2s ease-out forwards;
-                    `;
-                    document.body.appendChild(el);
-                    setTimeout(() => el.remove(), 2000);
-                }, i*50);
-            }
-        }
+    <!-- ARCHÍVUM -->
+    <div class="popup-overlay" id="archivePopup">
+        <div class="popup">
+            <button class="close-btn">×</button>
+            <h2>📜 Archívum</h2>
+            <div class="archive-grid" id="archiveGrid"></div>
+            <div class="nav-buttons" style="position: relative; bottom: auto; margin-top: 20px;">
+                <button class="nav-btn" id="backBtn">← Vissza</button>
+            </div>
+        </div>
+    </div>
 
-        // CSS keyframes konfettihez
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes confetti { 0% { transform:translateY(0) rotate(0); opacity:1; }
-            100% { transform:translateY(-100vh) rotate(720deg); opacity:0; } }`;
-        document.head.appendChild(style);
-
-        // Event listener-ek (touch + click)
-        doboz.addEventListener('click', dobozKlikk);
-        doboz.addEventListener('touchstart', (e) => { e.preventDefault(); dobozKlikk(); });
-
-        // Indítás
-        toltesRandomUzenet();
-    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
