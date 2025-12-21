@@ -1,1 +1,4 @@
 images/*.af
+admin
+package*.json
+node_modules

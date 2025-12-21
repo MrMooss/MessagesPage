@@ -1,7 +1,6 @@
 // GLOBAL FUNCTIONS
 window.closePopup = function(id) {
   document.getElementById(id).classList.remove('show');
-  // Ne töltsük újra az oldalt - eltávolítva a reload
 };
 
 window.showImageFullscreen = function() {
@@ -90,7 +89,7 @@ function startCountdownToNextDay() {
 
 // Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where, doc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc, limit, Timestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDTBHX8J1_x9aolqjnR-0oTW9jFs6-gW5Q",
@@ -107,13 +106,48 @@ const db = getFirestore(app);
 
 window.currentMessage = null;
 
-// Load random message
+async function loadTimedMessage() {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayTimestamp = Timestamp.fromDate(today);
+        
+        const q = query(
+            collection(db, 'messages'),
+            where('kinyitva', '==', false),
+            where('ido', '==', todayTimestamp)
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+            const todayDoc = snapshot.docs[0];
+            window.currentMessage = {
+                id: todayDoc.id,
+                ...todayDoc.data()
+            };
+            
+            if (!hasOpenedMessageToday()) {
+                document.getElementById('boxImg').src = 'images\\closedPresent.png';
+            }
+            return true;
+        } else {
+            console.log('Nincs üzenet a mai napra');
+            return false;
+        }
+    } catch (error) {
+        console.error('Load timed message error:', error);
+        return false;
+    }
+}
+
 async function loadRandomMessage() {
   try {
     const q = query(
-      collection(db, 'messages'),
-      where('kinyitva', '==', false),
-      limit(50)
+        collection(db, 'messages'),
+        where('kinyitva', '==', false),
+        where('ido', '==', null),
+        limit(50)
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
@@ -124,7 +158,10 @@ async function loadRandomMessage() {
       id: randomDoc.id,
       ...randomDoc.data()
     };
-    document.getElementById('boxImg').src = 'images\\closedPresent.png';
+    
+    if (!hasOpenedMessageToday()) {
+        document.getElementById('boxImg').src = 'images\\closedPresent.png';
+    }
   } catch (error) {
     console.error('Load error:', error);
   }
@@ -135,36 +172,35 @@ function checkAndShowTimer() {
   if (hasOpenedMessageToday()) {
     startCountdownToNextDay();
     
-    // Disabled-elj a giftbox-ot
     const giftBox = document.getElementById('giftBox');
     giftBox.style.cursor = 'not-allowed';
     giftBox.onclick = null;
   }
 }
 
-// Show message
 function showMessage() {
   document.getElementById('paperMessage').textContent = window.currentMessage.uzenet;
   const imgContainer = document.getElementById('messageImage');
   const popupImg = document.getElementById('popupImage');
+  const messageContainer = document.querySelector('.message-container');
 
   if (window.currentMessage.kep) {
     popupImg.src = window.currentMessage.kep;
     imgContainer.classList.remove('no-image');
+    messageContainer.classList.remove('no-image-container')
   } else {
     imgContainer.classList.add('no-image');
+    messageContainer.classList.add('no-image-container');
   }
 
   document.getElementById('messagePopup').classList.add('show');
   
-  // FONTOS: Jelöld meg hogy ma már nyitott üzenetet, és indítsd el a countdownt
   markMessageOpenedToday();
   startCountdownToNextDay();
 }
 
 // Gift box click
 document.getElementById('giftBox').onclick = async () => {
-  // Ellenőrizd hogy ma már meg lett-e nyitva
   if (hasOpenedMessageToday()) {
     alert('Ma már megnyitottál egy üzenetet! Majd holnap tudsz újat megnyitni.');
     return;
@@ -227,6 +263,11 @@ document.getElementById('giftBox').addEventListener('touchstart', e => {
   document.getElementById('giftBox').onclick();
 });
 
-// Start
-loadRandomMessage();
+(async function init() {
+    const timedLoaded = await loadTimedMessage();
+    if (!timedLoaded) {
+        await loadRandomMessage();
+    }
+    checkAndShowTimer();
+})();
 checkAndShowTimer();
