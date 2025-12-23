@@ -33,6 +33,12 @@ window.showArchive = async function() {
             ${data.kep ? `<img src="${data.kep}" alt="Üzenet kép">` : ''}
           </div>
         `;
+        
+        item.onclick = () => {
+          document.getElementById('archivePopup').classList.remove('show');
+          showArchivedMessage(data);
+        };
+        
         grid.appendChild(item);
       });
     }
@@ -42,6 +48,30 @@ window.showArchive = async function() {
     alert('Hiba történt');
   }
 };
+
+function showArchivedMessage(messageData) {
+  document.getElementById('paperMessage').textContent = messageData.uzenet;
+  const imgContainer = document.getElementById('messageImage');
+  const popupImg = document.getElementById('popupImage');
+  const messageContainer = document.querySelector('.message-container');
+
+  if (messageData.kep) {
+    popupImg.src = messageData.kep;
+    imgContainer.classList.remove('no-image');
+    messageContainer.classList.remove('no-image-container');
+  } else {
+    imgContainer.classList.add('no-image');
+    messageContainer.classList.add('no-image-container');
+  }
+
+  // Countdown elrejtése archivált üzenetnél
+  const countdownEl = document.getElementById('countdown');
+  if (countdownEl) {
+    countdownEl.style.display = 'none';
+  }
+
+  document.getElementById('messagePopup').classList.add('show');
+}
 
 // ===== LOCALSTORAGE HELPER FUNCTIONS =====
 function getTodayDateKey() {
