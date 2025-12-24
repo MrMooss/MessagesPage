@@ -145,23 +145,29 @@ window.currentMessage = null;
 async function loadTimedMessage() {
     try {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayTimestamp = Timestamp.fromDate(today);
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        console.log('Looking for date:', todayStr);
         
-        const q = query(
-            collection(db, 'messages'),
-            where('kinyitva', '==', false),
-            where('ido', '==', todayTimestamp)
-        );
+        const allMessages = await getDocs(collection(db, 'messages'));
         
-        const snapshot = await getDocs(q);
+        let foundMessage = null;
+        allMessages.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.kinyitva === false && data.ido) {
+                // Timestamp-ból Date objektum
+                const messageDate = data.ido.toDate();
+                const messageDateStr = `${messageDate.getFullYear()}-${String(messageDate.getMonth() + 1).padStart(2, '0')}-${String(messageDate.getDate()).padStart(2, '0')}`;
+                
+                console.log('Message date:', messageDateStr, 'Match:', messageDateStr === todayStr);
+                
+                if (messageDateStr === todayStr) {
+                    foundMessage = { id: doc.id, ...data };
+                }
+            }
+        });
         
-        if (!snapshot.empty) {
-            const todayDoc = snapshot.docs[0];
-            window.currentMessage = {
-                id: todayDoc.id,
-                ...todayDoc.data()
-            };
+        if (foundMessage) {
+            window.currentMessage = foundMessage;
             
             if (!(await hasOpenedMessageToday())) {
                 document.getElementById('boxImg').src = 'images\\closedPresent.png';
