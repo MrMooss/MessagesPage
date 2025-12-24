@@ -128,35 +128,6 @@ function startCountdownToNextDay() {
   setInterval(update, 1000);
 }
 
-function startCountdownToNextDay() {
-  const countdownEl = document.getElementById('countdown');
-  if (!countdownEl) return;
-
-  function update() {
-    const now = new Date();
-    const tomorrow = new Date();
-    tomorrow.setHours(24, 0, 0, 0);
-    const diff = tomorrow - now;
-
-    if (diff <= 0) {
-      countdownEl.innerHTML = 'Új üzenet érkezett, frissítsd az oldalt!';
-      return;
-    }
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-
-    countdownEl.innerHTML = `${String(hours).padStart(2, '0')}:` +
-      `${String(minutes).padStart(2, '0')}:` +
-      `${String(seconds).padStart(2, '0')}`;
-  }
-
-  update();
-  setInterval(update, 1000);
-}
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyDTBHX8J1_x9aolqjnR-0oTW9jFs6-gW5Q",
   authDomain: "messagespage.firebaseapp.com",
