@@ -1,3 +1,6 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc, limit, Timestamp, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
 // GLOBAL FUNCTIONS
 window.closePopup = function(id) {
   document.getElementById(id).classList.remove('show');
@@ -73,20 +76,56 @@ function showArchivedMessage(messageData) {
   document.getElementById('messagePopup').classList.add('show');
 }
 
-// ===== LOCALSTORAGE HELPER FUNCTIONS =====
-function getTodayDateKey() {
-  const today = new Date();
-  return `openedMessage_${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+
+async function hasOpenedMessageToday() {
+  try {
+    const docRef = doc(db, 'openToday', 'today');
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data().opened === true : false;
+  } catch (error) {
+    console.error('Error checking:', error);
+    return false;
+  }
 }
 
-function hasOpenedMessageToday() {
-  const key = getTodayDateKey();
-  return localStorage.getItem(key) === 'true';
+async function setOpenedStatus(status) {
+  try {
+    const docRef = doc(db, 'openToday', 'today');
+    await setDoc(docRef, { opened: status });
+  } catch (error) {
+    console.error('Error setting status:', error);
+  }
 }
 
-function markMessageOpenedToday() {
-  const key = getTodayDateKey();
-  localStorage.setItem(key, 'true');
+function startCountdownToNextDay() {
+  const countdownEl = document.getElementById('countdown');
+  if (!countdownEl) return;
+
+  function update() {
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setHours(24, 0, 0, 0);
+    const diff = tomorrow - now;
+
+    if (diff <= 0) {
+      // ÉJFÉLKOR RESET
+      setOpenedStatus(false);
+      countdownEl.innerHTML = 'Új üzenet érkezett, frissítsd az oldalt!';
+      return;
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    countdownEl.innerHTML = `${String(hours).padStart(2,'0')}:` +
+      `${String(minutes).padStart(2,'0')}:` +
+      `${String(seconds).padStart(2,'0')}`;
+  }
+
+  update();
+  setInterval(update, 1000);
 }
 
 function startCountdownToNextDay() {
@@ -117,9 +156,6 @@ function startCountdownToNextDay() {
   setInterval(update, 1000);
 }
 
-// Firebase imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where, doc, updateDoc, limit, Timestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDTBHX8J1_x9aolqjnR-0oTW9jFs6-gW5Q",
@@ -242,6 +278,7 @@ document.getElementById('giftBox').onclick = async () => {
     await updateDoc(doc(db, 'messages', window.currentMessage.id), {
       kinyitva: true
     });
+    await setOpenedStatus(true);
     showMessage();
   } catch (error) {
     console.error('Update error:', error);
