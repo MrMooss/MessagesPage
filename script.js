@@ -76,12 +76,11 @@ function showArchivedMessage(messageData) {
   document.getElementById('messagePopup').classList.add('show');
 }
 
-
-
 async function hasOpenedMessageToday() {
   try {
     const docRef = doc(db, 'openToday', 'today');
     const docSnap = await getDoc(docRef);
+    console.log('hasOpenedMessageToday:', docSnap.exists() ? docSnap.data().opened : false);
     return docSnap.exists() ? docSnap.data().opened === true : false;
   } catch (error) {
     console.error('Error checking:', error);
@@ -93,6 +92,7 @@ async function setOpenedStatus(status) {
   try {
     const docRef = doc(db, 'openToday', 'today');
     await setDoc(docRef, { opened: status });
+    console.log('Status set to:', status);
   } catch (error) {
     console.error('Error setting status:', error);
   }
@@ -109,7 +109,6 @@ function startCountdownToNextDay() {
     const diff = tomorrow - now;
 
     if (diff <= 0) {
-      // ÉJFÉLKOR RESET
       setOpenedStatus(false);
       countdownEl.innerHTML = 'Új üzenet érkezett, frissítsd az oldalt!';
       return;
@@ -164,7 +163,7 @@ async function loadTimedMessage() {
                 ...todayDoc.data()
             };
             
-            if (!hasOpenedMessageToday()) {
+            if (!(await hasOpenedMessageToday())) {
                 document.getElementById('boxImg').src = 'images\\closedPresent.png';
             }
             return true;
@@ -196,7 +195,8 @@ async function loadRandomMessage() {
       ...randomDoc.data()
     };
     
-    if (!hasOpenedMessageToday()) {
+ 
+    if (!(await hasOpenedMessageToday())) {
         document.getElementById('boxImg').src = 'images\\closedPresent.png';
     }
   } catch (error) {
@@ -205,8 +205,11 @@ async function loadRandomMessage() {
 }
 
 // Check if message already opened today and show timer
-function checkAndShowTimer() {
-  if (hasOpenedMessageToday()) {
+async function checkAndShowTimer() {
+  const opened = await hasOpenedMessageToday();
+  console.log('checkAndShowTimer - opened status:', opened);
+  
+  if (opened) {
     startCountdownToNextDay();
     
     const giftBox = document.getElementById('giftBox');
@@ -215,7 +218,7 @@ function checkAndShowTimer() {
   }
 }
 
-function showMessage() {
+async function showMessage() {
   document.getElementById('paperMessage').textContent = window.currentMessage.uzenet;
   const imgContainer = document.getElementById('messageImage');
   const popupImg = document.getElementById('popupImage');
@@ -224,7 +227,7 @@ function showMessage() {
   if (window.currentMessage.kep) {
     popupImg.src = window.currentMessage.kep;
     imgContainer.classList.remove('no-image');
-    messageContainer.classList.remove('no-image-container')
+    messageContainer.classList.remove('no-image-container');
   } else {
     imgContainer.classList.add('no-image');
     messageContainer.classList.add('no-image-container');
@@ -232,13 +235,13 @@ function showMessage() {
 
   document.getElementById('messagePopup').classList.add('show');
   
-  markMessageOpenedToday();
+  await setOpenedStatus(true);
   startCountdownToNextDay();
 }
 
 // Gift box click
 document.getElementById('giftBox').onclick = async () => {
-  if (hasOpenedMessageToday()) {
+  if (await hasOpenedMessageToday()) {
     alert('Ma már megnyitottál egy üzenetet! Majd holnap tudsz újat megnyitni.');
     return;
   }
@@ -249,8 +252,7 @@ document.getElementById('giftBox').onclick = async () => {
     await updateDoc(doc(db, 'messages', window.currentMessage.id), {
       kinyitva: true
     });
-    await setOpenedStatus(true);
-    showMessage();
+    await showMessage();
   } catch (error) {
     console.error('Update error:', error);
   }
@@ -301,11 +303,11 @@ document.getElementById('giftBox').addEventListener('touchstart', e => {
   document.getElementById('giftBox').onclick();
 });
 
+// START - csak egyszer hívjuk meg!
 (async function init() {
     const timedLoaded = await loadTimedMessage();
     if (!timedLoaded) {
         await loadRandomMessage();
     }
-    checkAndShowTimer();
+    await checkAndShowTimer();
 })();
-checkAndShowTimer();
