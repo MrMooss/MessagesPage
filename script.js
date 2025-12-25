@@ -84,12 +84,20 @@ async function hasOpenedMessageToday() {
     if (!docSnap.exists()) return false;
     
     const data = docSnap.data();
-    const today = new Date().toDateString();
     
-    console.log('hasOpenedMessageToday - opened:', data.opened, 'lastOpenDay:', data.lastOpenDay, 'today:', today);
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    let lastOpenDayStr = null;
+    if (data.lastOpenDay && data.lastOpenDay.toDate) {
+      const lastDate = data.lastOpenDay.toDate();
+      lastOpenDayStr = `${lastDate.getFullYear()}-${String(lastDate.getMonth() + 1).padStart(2, '0')}-${String(lastDate.getDate()).padStart(2, '0')}`;
+    }
+    
+    console.log('hasOpenedMessageToday - opened:', data.opened, 'lastOpenDay:', lastOpenDayStr, 'today:', todayStr);
     
     // Ha ma nyitott már ÉS ugyanaz a nap
-    return data.opened === true && data.lastOpenDay === today;
+    return data.opened === true && lastOpenDayStr === todayStr;
   } catch (error) {
     console.error('Error checking:', error);
     return false;
@@ -100,14 +108,18 @@ async function hasOpenedMessageToday() {
 async function setOpenedStatus(status) {
   try {
     const docRef = doc(db, 'openToday', 'today');
-    const today = new Date().toDateString();
+    
+    // Mai dátum Timestamp-ként (00:00:00)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = Timestamp.fromDate(today);
     
     await setDoc(docRef, { 
       opened: status,
-      lastOpenDay: today
+      lastOpenDay: todayTimestamp  // Timestamp formátumban
     });
     
-    console.log('Status set to:', status, 'on', today);
+    console.log('Status set to:', status, 'on', todayTimestamp);
   } catch (error) {
     console.error('Error setting status:', error);
   }
