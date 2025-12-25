@@ -80,19 +80,34 @@ async function hasOpenedMessageToday() {
   try {
     const docRef = doc(db, 'openToday', 'today');
     const docSnap = await getDoc(docRef);
-    console.log('hasOpenedMessageToday:', docSnap.exists() ? docSnap.data().opened : false);
-    return docSnap.exists() ? docSnap.data().opened === true : false;
+    
+    if (!docSnap.exists()) return false;
+    
+    const data = docSnap.data();
+    const today = new Date().toDateString();
+    
+    console.log('hasOpenedMessageToday - opened:', data.opened, 'lastOpenDay:', data.lastOpenDay, 'today:', today);
+    
+    // Ha ma nyitott már ÉS ugyanaz a nap
+    return data.opened === true && data.lastOpenDay === today;
   } catch (error) {
     console.error('Error checking:', error);
     return false;
   }
 }
 
+// Beállítja az állapotot
 async function setOpenedStatus(status) {
   try {
     const docRef = doc(db, 'openToday', 'today');
-    await setDoc(docRef, { opened: status });
-    console.log('Status set to:', status);
+    const today = new Date().toDateString();
+    
+    await setDoc(docRef, { 
+      opened: status,
+      lastOpenDay: today
+    });
+    
+    console.log('Status set to:', status, 'on', today);
   } catch (error) {
     console.error('Error setting status:', error);
   }
@@ -306,27 +321,8 @@ document.getElementById('giftBox').addEventListener('touchstart', e => {
   document.getElementById('giftBox').onclick();
 });
 
-async function checkAndResetIfNewDay() {
-  const lastResetDate = localStorage.getItem('lastResetDate');
-  
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  
-  console.log('Last reset:', lastResetDate, 'Today:', todayStr);
-  
-  if (lastResetDate !== todayStr) {
-    // Új nap van - reset
-    await setOpenedStatus(false);
-    localStorage.setItem('lastResetDate', todayStr);
-    console.log('Új nap - status resetelve');
-  } else {
-    console.log('Ugyanaz a nap, nincs reset');
-  }
-}
-
 // START - csak egyszer hívjuk meg!
 (async function init() {
-    await checkAndResetIfNewDay();
     const timedLoaded = await loadTimedMessage();
     if (!timedLoaded) {
         await loadRandomMessage();
