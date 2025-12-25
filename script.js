@@ -308,13 +308,19 @@ document.getElementById('giftBox').addEventListener('touchstart', e => {
 
 async function checkAndResetIfNewDay() {
   const lastResetDate = localStorage.getItem('lastResetDate');
-  const today = new Date().toDateString();
   
-  if (lastResetDate !== today) {
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  console.log('Last reset:', lastResetDate, 'Today:', todayStr);
+  
+  if (lastResetDate !== todayStr) {
     // Új nap van - reset
     await setOpenedStatus(false);
-    localStorage.setItem('lastResetDate', today);
+    localStorage.setItem('lastResetDate', todayStr);
     console.log('Új nap - status resetelve');
+  } else {
+    console.log('Ugyanaz a nap, nincs reset');
   }
 }
 
