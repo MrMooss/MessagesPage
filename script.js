@@ -109,10 +109,9 @@ function startCountdownToNextDay() {
     const diff = tomorrow - now;
 
     if (diff <= 0) {
-      setOpenedStatus(false);
-      countdownEl.innerHTML = 'Új üzenet érkezett, frissítsd az oldalt!';
-      return;
-    }
+        countdownEl.innerHTML = 'Új üzenet érkezett, frissítsd az oldalt!';
+        return;
+      }
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff / (1000 * 60)) % 60);
@@ -279,8 +278,6 @@ document.getElementById('menuArchiveBtn').onclick = () => {
 };
 
 // Event listeners
-document.getElementById('fullscreenBtn').onclick = showImageFullscreen;
-document.getElementById('archiveBtn').onclick = showArchive;
 document.getElementById('backBtn').onclick = () => closePopup('archivePopup');
 
 // Fullscreen image click to close
@@ -309,8 +306,21 @@ document.getElementById('giftBox').addEventListener('touchstart', e => {
   document.getElementById('giftBox').onclick();
 });
 
+async function checkAndResetIfNewDay() {
+  const lastResetDate = localStorage.getItem('lastResetDate');
+  const today = new Date().toDateString();
+  
+  if (lastResetDate !== today) {
+    // Új nap van - reset
+    await setOpenedStatus(false);
+    localStorage.setItem('lastResetDate', today);
+    console.log('Új nap - status resetelve');
+  }
+}
+
 // START - csak egyszer hívjuk meg!
 (async function init() {
+    await checkAndResetIfNewDay();
     const timedLoaded = await loadTimedMessage();
     if (!timedLoaded) {
         await loadRandomMessage();

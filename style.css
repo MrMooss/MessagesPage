@@ -243,16 +243,6 @@ h1 {
   transform: rotate(45deg);
 }
 
-.message-container.no-image-container {
-  justify-content: center;
-}
-
-.message-container.no-image-container .uzenet-papir {
-  max-width: 600px;
-  width: 100%;
-  transform: rotate(0deg);
-}
-
 .polaroid {
   flex: 0 0 300px;
   background: white;
@@ -420,6 +410,14 @@ h1 {
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   display: flex;
   gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.nav-buttons.visible {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .nav-btn {
@@ -435,13 +433,24 @@ h1 {
 
 .countdown {
   margin-top: 15px;
-  font-size: 1.3em;
-  color: #f56dfa;
+  font-size: 1.1em;
   font-weight: 700;
+  color: #d63384;
 }
 
 .no-image { 
   display: none; 
+}
+
+/* ÜZENET KÖZÉPEN, ha nincs kép */
+.message-container.no-image-container {
+  justify-content: center;
+}
+
+.message-container.no-image-container .uzenet-papir {
+  max-width: 600px;
+  width: 100%;
+  transform: rotate(0deg);
 }
 
 /* RESPONSIVE */
@@ -449,16 +458,27 @@ h1 {
   .message-container {
     flex-direction: column;
     align-items: center;
+    padding: 10px;
+    padding-bottom: 100px;
   }
 
   .uzenet-papir {
     max-width: 100%;
-    font-size: 1.4em;
+    font-size: 1.1em; /* Kisebb betű */
+    padding: 15px;
+    line-height: 1.4;
+    transform: rotate(0deg); /* Nincs forgatás mobilon */
   }
 
   .polaroid {
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
+    height: auto;
+    transform: rotate(0deg); /* Nincs forgatás mobilon */
+  }
+  
+  .polaroid img {
+    height: 200px;
   }
 
   .hamburger-menu {
@@ -466,5 +486,87 @@ h1 {
     right: 15px;
     width: 45px;
     height: 45px;
+  }
+  
+  .nav-buttons {
+    bottom: 10px;
+    padding: 8px 12px;
+    gap: 6px;
+    max-width: 95%;
+    font-size: 0.85em;
+  }
+  
+  .nav-btn {
+    padding: 8px 15px;
+    font-size: 0.85em;
+  }
+  
+  .countdown {
+    font-size: 0.95em;
+    margin-top: 8px;
+  }
+  
+  .popup {
+    max-height: 90vh;
+    padding: 15px;
+    padding-bottom: 90px;
+    border-radius: 15px;
+  }
+  
+  /* Popup tartalom scrollozható */
+  .popup .message-container {
+    max-height: calc(90vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .fullscreen-img {
+    object-fit: contain;
+    max-height: 100vh;
+    max-width: 100vw;
+  }
+  
+  .close-btn {
+    font-size: 2em;
+    top: 8px;
+    right: 12px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  
+  h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  .uzenet-papir {
+    font-size: 1em;
+    padding: 12px;
+  }
+  
+  .polaroid {
+    max-width: 250px;
+  }
+  
+  .polaroid img {
+    height: 180px;
+  }
+  
+  .nav-btn {
+    padding: 7px 12px;
+    font-size: 0.8em;
+  }
+  
+  .popup {
+    padding: 12px;
+    max-width: 95vw;
   }
 }
